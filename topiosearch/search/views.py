@@ -7,7 +7,7 @@ from .models import Search
 
 
 # Create your views here.
-def api_search_term(request):
+def api_search_term(request): 
     term = request.GET.get('term')
     topio_search = Search.onTopio(term)
 
