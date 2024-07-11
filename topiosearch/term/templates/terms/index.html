@@ -1,44 +1,16 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>TopioSearch 2.0</title>
-    {% load static %}
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css" />
-    <link rel="stylesheet" href="{% static 'term/style.css' %}" />
-</head>
-<body>
-    <header>
-        <h1>TopioSearch 2.0 - En développement</h1>
-        <!--<nav>
-            <ul>
-                <li>
-                    <a href="#">Recherche</a>
-                    <a href="#">Lexique</a>
-                </li>
-            </ul>
-        </nav>-->
-    </header>
-    <main>
+{% include 'header.html' %}
+
+    <main id="terms__index">
 
         <h3>Lexique romand</h3>
 
         <dl>
             {% for term in terms %}
 
-                <dt>{{ term.name }} <i>{{ term.type }}</i></dt>
-                <dd>{{ term.definition|safe }}</dd>
-                {% if term.example %}
-                <blockquote>{{ term.example|safe }}</blockquote>
-                {% endif %}
-                <div class="copyright"><small>Source: <a href="{{ term.origin }}" target="_blank">{{ term.copyright }}</a></small></div>
-
+                <dt><a href="{{ term.url }}">{{ term.name }}</a>{% if term.type %} <small>{{ term.type }}</small>{% endif %}</dt>
+                <dd>{{ term.definition | truncatechars:100 }}</dd>
             {% endfor %}
         </dl>
 
     </main>
-    <footer>
-
-    </footer>
-</body>
-</html>
+{% include 'footer.html' %}

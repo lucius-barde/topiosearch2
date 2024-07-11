@@ -3,6 +3,7 @@ from django.db.models.functions import Now
 
 
 class Term(models.Model):
+    url = models.CharField(max_length=64, unique=True, default="undefined")
     name = models.CharField(max_length=64)
     type = models.CharField(max_length=32, null=True, blank=True)
     definition = models.TextField()

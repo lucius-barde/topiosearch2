@@ -1,0 +1,55 @@
+{% include 'header.html' %}
+    <main id="home">
+        <h1>TopioSearch</h1>
+        <p>Outil de recherche de mots suisse-romands.</p>
+
+        <p>Cet outil recherche des termes romands sur plusieurs sites à la fois: henrysuter.ch et topio.ch.</p>
+        <p>(Ceci est la version 2 en développement !)</p>
+
+        <form id="topiosearch__form" name="topiosearch__form" method="get" action="/search" enctype="multipart/form-data">
+            <div>
+                <input placeholder="Entrer un terme p.ex. clédar, niolu, Lausanne ou huitante..." type="text" name="topiosearch__search-term" maxlength="64" />
+            </div>
+            <div>
+                <input type="checkbox" disabled /> <label>Recherche à distance</label><br /><br />
+            </div>
+            <div>
+                <button type="submit">Rechercher!</button>
+            </div>
+
+        </form>
+    </main>
+
+    <script>
+
+        function initApiSearchTerm(e){
+            e.preventDefault()
+
+            const data = new FormData(event.target);
+            const dataObject = Object.fromEntries(data.entries());
+            data.forEach((value, key) => {
+                console.log(`${key}: ${value}`);
+            });
+
+            const urlParams = new URLSearchParams({
+              term: data.get("topiosearch__search-term")
+            });
+            console.log(`params: ${urlParams}`);
+
+            fetch(`/search?${urlParams}`, {
+              method: "GET",
+              headers: {
+                "X-Requested-With": "XMLHttpRequest",
+              }
+            })
+            .then(response => response.json())
+            .then(data => {
+              console.log(data);
+            });
+        }
+
+        const form = document.getElementById("topiosearch__form");
+        form.addEventListener("submit", initApiSearchTerm);
+    </script>
+
+{% include 'footer.html' %}

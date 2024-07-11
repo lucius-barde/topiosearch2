@@ -3,21 +3,26 @@ from django.shortcuts import render
 from .models import Term
 
 def index(request):
-    terms = Term.objects.all()
+    terms = Term.objects.all().order_by('name')
     for term in terms:
 
         # Clean definition
         if(term.definition):
-            decoded_def = term.definition.encode().decode('unicode-escape')
-            term.definition = decoded_def.replace("\\", "")
+            term.definition = term.definition.replace("\\", "")
 
         # Clean example
         if(term.example):
-            decoded_example = term.example.encode().decode('unicode-escape')
-            term.example = decoded_example.replace("\\", "")
+            term.example = term.example.replace("\\", "")
 
         # Type
         if term.type is None:
             term.type = ""
 
     return render(request, 'terms/index.html',{'terms':terms})
+
+def term(request,url):
+    term = Term.objects.get(url=url)
+    params = {
+        'term': term,
+    }
+    return render(request, 'term/index.html',params)

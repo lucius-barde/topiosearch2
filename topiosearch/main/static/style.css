@@ -1,0 +1,13 @@
+html{background-color:#eee;}
+body{ margin: 1em auto; max-width: 1024px; box-sizing: border-box; font-family: 'Alegreya Sans', sans-serif;}
+
+header, footer{background-color:#ddd;padding: 1em;}
+main{background-color:#fff;padding: 1em;}
+
+dt{font-weight: bold; margin-top: 2em;}
+dd{margin-left: 8px; margin: 0.3em 0 0.3em 1em;}
+dl blockquote{margin-left: 1em;}
+blockquote{font-style:italic;}
+#term__single h1 small,
+#terms__index dt small {font-style:italic; font-weight: normal;}
+form[name=topiosearch__form]{max-width: 600px; margin:auto;}

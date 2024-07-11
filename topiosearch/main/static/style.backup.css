@@ -2,3 +2,6 @@ body{box-sizing: border-box; padding: 1em; font-family: 'Alegreya Sans', sans-se
 dt{font-weight: bold; margin-top: 2em;}
 dd{margin-left: 8px; margin: 0.3em 0 0.3em 1em;}
 dl blockquote{margin-left: 1em;}
+blockquote{font-style:italic;}
+#term__single h1 small,
+#terms__index dt small {font-style:italic; font-weight: normal;}

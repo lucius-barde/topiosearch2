@@ -1,30 +1,13 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <title>TopioSearch 2.0</title>
-</head>
-<body>
-    <header>
-        <h1>TopioSearch 2.0</h1>
-        <nav>
-            <ul>
-                <li>
-                    <a href="#">Recherche</a>
-                    <a href="#">Lexique</a>
-                </li>
-            </ul>
-        </nav>
-    </header>
-    <main>
+{% include 'header.html' %}
+    <main id="term__single">
+        <h1>{{ term.name }}{% if term.type %} <small>{{ term.type }}</small>{% endif %}</h1>
 
-        <h3>Définition du terme</h3>
+        <p>{{ term.definition }}</p>
+        {% if term.example %}
+        <blockquote>{{ term.example }}</blockquote>
+        {% endif %}
+        <div class="copyright"><small>Source: <a href="{{ term.origin }}" target="_blank">{{ term.copyright }}</a></small></div>
 
-        <p>Lorem ipsum</p>
 
     </main>
-    <footer>
-
-    </footer>
-</body>
-</html>
+{% include 'footer.html' %}
