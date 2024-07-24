@@ -13,6 +13,7 @@ def api_search_term(request):
 
     response = {
         "responses":{
+            "local":False,
             "topio":topio_search,
             "hsuter": False,
             "hsuternames": False

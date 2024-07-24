@@ -1,12 +1,65 @@
 from django.db import models
+from unidecode import unidecode
+from bs4 import BeautifulSoup
+import requests
 
 # Create your models here.
 class Search(models.Model):
     pass
     # create topiosearch functions here
 
-    def onTopio(term):
+    def inputFilter(term):
+        # TODO - filter unsafe input
         return term
+
+    def onTopio(termUnsafeInput):
+
+        term = Search.inputFilter(termUnsafeInput)
+        termNoAccents = unidecode(term)
+        termLower = term.lower()
+        termNoAccentsLower = termNoAccents.lower()
+        termCap = term.capitalize()
+        termNoAccentsCap = termNoAccents.capitalize()
+        termUpper = term.upper()
+        termNoAccentsUpper = termNoAccents.upper()
+        searchCriteria = (term,termNoAccents,termLower,termNoAccentsLower,termCap,termNoAccentsCap,termUpper,termNoAccentsUpper)
+
+        # generate needed variables
+        name = ""
+
+        # TODO - crawl topio database
+        url = 'https://www.topio.ch/dico.php'
+        htmlrequest = requests.get(url) # TODO - show debug data
+        htmldata = htmlrequest.text
+
+        html = BeautifulSoup(htmldata, "html.parser")
+        content = html.find('div', id = 'contenu')
+        table = html.find('table')
+        rows = table.find_all('tr')
+
+        topioterms = []
+        for index, row in enumerate(rows):
+            if index > 2:
+                first_td = row.find('td')
+                if first_td:
+                    topioterm = first_td.get_text()
+                    topioterms.append(topioterm)
+                    if(topioterm in searchCriteria):
+                        name = topioterm
+
+        return {
+            "search_criteria":searchCriteria,
+            "url":termNoAccentsLower,
+            "name": name,
+            "type":"",
+            "definition":"",
+            "example":"",
+            "alternative_forms":"",
+            "copyright":"",
+            "origin":""
+        }
+
+
 
 
 '''
