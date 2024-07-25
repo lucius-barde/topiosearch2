@@ -1,23 +1,23 @@
 {% include 'header.html' %}
     <main id="home">
         <h1>TopioSearch</h1>
-        <p>Outil de recherche de mots suisse-romands.</p>
-
-        <p>Cet outil recherche des termes romands sur plusieurs sites à la fois: henrysuter.ch et topio.ch.</p>
-        <p>(Ceci est la version 2 en développement !)</p>
+        <p>Outil de recherche de mots suisse-romands sur divers sites.</p>
 
         <form id="topiosearch__form" name="topiosearch__form" method="get" action="/search" enctype="multipart/form-data">
-            <div>
-                <input placeholder="Entrer un terme p.ex. clédar, niolu, Lausanne ou huitante..." type="text" name="topiosearch__search-term" maxlength="64" />
-            </div>
-            <div>
-                <input type="checkbox" disabled /> <label>Recherche à distance</label><br /><br />
-            </div>
-            <div>
+
+            <fieldset role="group">
+                <input placeholder="Entrer un terme p.ex. clédar, niolu, Lausanne..." type="text" name="topiosearch__search-term" maxlength="64" />
                 <button type="submit">Rechercher!</button>
-            </div>
+            </fieldset>
 
         </form>
+
+        <div id="topiosearch__search-results-container">
+            <div id="topiosearch__search-results">
+
+            </div>
+        </div>
+
     </main>
 
     <script>
@@ -45,6 +45,16 @@
             .then(response => response.json())
             .then(data => {
               console.log(data);
+              if(data.responses.topio.name){
+                  // displays human-readable data
+                  document.getElementById("topiosearch__search-results").innerHTML = "<h3>" + data.responses.topio.name + "</h3>" +
+                      "<p>" +
+                        "<span>" + data.responses.topio.definition + "</span><br />" +
+                        "<blockquote>" + data.responses.topio.example + "</blockquote>" +
+                      "</p>";
+              } else{
+                  document.getElementById("topiosearch__search-results").innerHTML = "<h4>Tetcheu !</h4> Aucun résultat trouvé pour <i>" + data.responses.topio.search_criteria[0] + "</i> !";
+              }
             });
         }
 

@@ -11,3 +11,5 @@ blockquote{font-style:italic;}
 #term__single h1 small,
 #terms__index dt small {font-style:italic; font-weight: normal;}
 form[name=topiosearch__form]{max-width: 600px; margin:auto;}
+
+pre#topiosearch__search-results-debug{height: 200px; white-space: preserve;}
