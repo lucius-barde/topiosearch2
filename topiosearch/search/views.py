@@ -7,7 +7,7 @@ from .models import Search
 
 
 # Create your views here.
-def api_search_term(request): 
+def api_remote_search_term(request):
     term = request.GET.get('term')
     topio_search = Search.onTopio(term)
 
@@ -20,3 +20,6 @@ def api_search_term(request):
         }
     }
     return JsonResponse(response)
+
+def api_local_search_term(request):
+    return JsonResponse({"todo":"TODO"})

@@ -36,7 +36,9 @@
             });
             console.log(`params: ${urlParams}`);
 
-            fetch(`/search?${urlParams}`, {
+            //TODO in the future: allow local or remote search
+
+            fetch(`/search/remote?${urlParams}`, {
               method: "GET",
               headers: {
                 "X-Requested-With": "XMLHttpRequest",
@@ -50,7 +52,7 @@
                   document.getElementById("topiosearch__search-results").innerHTML = "<h3>" + data.responses.topio.name + "</h3>" +
                       "<p>" +
                         "<span>" + data.responses.topio.definition + "</span><br />" +
-                        "<blockquote>" + data.responses.topio.example + "</blockquote>" +
+                        (data.responses.topio.example ? "<blockquote>" + data.responses.topio.example + "</blockquote>" : "") +
                       "</p>";
               } else{
                   document.getElementById("topiosearch__search-results").innerHTML = "<h4>Tetcheu !</h4> Aucun résultat trouvé pour <i>" + data.responses.topio.search_criteria[0] + "</i> !";
