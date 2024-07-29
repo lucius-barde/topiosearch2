@@ -10,6 +10,8 @@
                 <button type="submit">Rechercher!</button>
             </fieldset>
 
+            <input type="checkbox" name="topiosearch__remote-search" id="topiosearch__remote-search" /> Recherche à distance
+
         </form>
 
         <div id="topiosearch__search-results-container">
@@ -31,33 +33,75 @@
                 console.log(`${key}: ${value}`);
             });
 
+            remoteSearch = data.get("topiosearch__remote-search")
+
             const urlParams = new URLSearchParams({
               term: data.get("topiosearch__search-term")
             });
             console.log(`params: ${urlParams}`);
 
-            //TODO in the future: allow local or remote search
 
-            fetch(`/search/remote?${urlParams}`, {
-              method: "GET",
-              headers: {
-                "X-Requested-With": "XMLHttpRequest",
-              }
-            })
-            .then(response => response.json())
-            .then(data => {
-              console.log(data);
-              if(data.responses.topio.name){
-                  // displays human-readable data
-                  document.getElementById("topiosearch__search-results").innerHTML = "<h3>" + data.responses.topio.name + "</h3>" +
-                      "<p>" +
-                        "<span>" + data.responses.topio.definition + "</span><br />" +
-                        (data.responses.topio.example ? "<blockquote>" + data.responses.topio.example + "</blockquote>" : "") +
-                      "</p>";
-              } else{
-                  document.getElementById("topiosearch__search-results").innerHTML = "<h4>Tetcheu !</h4> Aucun résultat trouvé pour <i>" + data.responses.topio.search_criteria[0] + "</i> !";
-              }
-            });
+            if(remoteSearch == "on"){
+
+                //REMOTE search
+
+                fetch(`/search/remote?${urlParams}`, {
+                  method: "GET",
+                  headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                  }
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                  document.getElementById("topiosearch__search-results").innerHTML = ''
+
+                  data.responses.forEach((response)=>{
+
+                      console.log("Distant response (topio or hsuter):")
+                      console.log(response);
+
+                       if(response.name){
+                          // displays human-readable data
+                          document.getElementById("topiosearch__search-results").innerHTML = document.getElementById("topiosearch__search-results").innerHTML + "<h3>" + response.name + "</h3>" +
+                              "<p>" +
+                                "<span>" + response.definition + "</span><br />" +
+                                (response.example ? "<blockquote>" + response.example + "</blockquote>" : "") +
+                              "</p>";
+                      } else{
+
+                      }
+                  });
+
+                });
+            } else {
+
+                // LOCAL search
+                fetch(`/search/local?${urlParams}`, {
+                  method: "GET",
+                  headers: {
+                    "X-Requested-With": "XMLHttpRequest",
+                  }
+                })
+                .then(response => response.json())
+                .then(data => {
+
+                      console.log("local response from database: ");
+                      console.log(data);
+
+                      document.getElementById("topiosearch__search-results").innerHTML = '';
+
+                      data.responses.forEach((response)=>{
+
+                            document.getElementById("topiosearch__search-results").innerHTML = document.getElementById("topiosearch__search-results").innerHTML + "<h3>" + response.name + "</h3>" +
+                                  "<p>" +
+                                    "<span>" + response.definition + "</span><br />" +
+                                    (response.example ? "<blockquote>" + response.example + "</blockquote>" : "") +
+                                  "</p>";
+                      });
+                });
+
+            }
         }
 
         const form = document.getElementById("topiosearch__form");
