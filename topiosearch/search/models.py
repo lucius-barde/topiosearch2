@@ -4,6 +4,7 @@ from bs4 import BeautifulSoup
 import requests
 import sqlite3
 
+
 # Create your models here.
 class Search(models.Model):
     pass
@@ -45,7 +46,7 @@ class Search(models.Model):
                 d[col[0]] = row[idx]
             return d
 
-        # TODO: sql query with LIKE all search criteria
+
         connection = sqlite3.connect('db.sqlite3')
         connection.row_factory = format_rows_to_dict #has to be done manually with sqlite
         cursor = connection.cursor()
@@ -61,6 +62,8 @@ class Search(models.Model):
         OR alternative_forms LIKE "%'''+termNoAccentsLower+'''%"
         ; ''')
         rows = result.fetchall()
+        connection.commit()
+        connection.close()
 
         if(len(rows) == 0):
             return {"error":"no_term_found"}
@@ -123,7 +126,29 @@ class Search(models.Model):
 
                             example = example + examples_separator + example_i_element.get_text().capitalize()
 
+
+        # save in database if not exists
+
+        connection = sqlite3.connect('db.sqlite3')
+        cursor = connection.cursor()
+
+        topioSearchQuery = '''SELECT COUNT(id) AS count FROM term_term WHERE url = ? AND copyright = "topio.ch";'''
+        result = cursor.execute(topioSearchQuery, (termNoAccentsLower,))
+        topioAlreadyExists = result.fetchone()[0]
+
+        if(topioAlreadyExists == 0 and name != ""):
+            topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
+            VALUES ( NULL, ?, "", ?,  ?, "", "topio.ch", "https://topio.ch/dico.php", DATETIME('now'), DATETIME('now'), 0, ?);'''
+            cursor.execute(topioInsertQuery, (name, definition, example, termNoAccentsLower))
+            connection.commit()
+            connection.close()
+        else:
+            pass
+            # TODO: remove the "unique" constraint on url, we shall display all the things for a given url (to be tested with 'huitante')
+            # TODO: maybe allow for updating the entry here, though probably unnecessary.
+
         response = {
+            "debug":topioAlreadyExists,
             "search_criteria":searchCriteria,
             "url":termNoAccentsLower,
             "name": name,
