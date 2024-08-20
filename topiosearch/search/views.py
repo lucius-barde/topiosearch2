@@ -14,7 +14,7 @@ def api_remote_search_term(request):
 
     responses.append(topio_search) # TODO: only if not false
 
-    hsuter_search = False
+    hsuter_search = Search.onHSuter(term)
     responses.append(hsuter_search)  # TODO: only if not false
 
     hsuternames_search = False

@@ -136,6 +136,7 @@ class Search(models.Model):
         result = cursor.execute(topioSearchQuery, (termNoAccentsLower,))
         topioAlreadyExists = result.fetchone()[0]
 
+        # TODO: can cause bugs if topio-name and hsuter-name both exist in the database (check with: huitante)
         if(topioAlreadyExists == 0 and name != ""):
             topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
             VALUES ( NULL, ?, "", ?,  ?, "", "topio.ch", "https://topio.ch/dico.php", DATETIME('now'), DATETIME('now'), 0, ?);'''
@@ -148,7 +149,7 @@ class Search(models.Model):
             # TODO: maybe allow for updating the entry here, though probably unnecessary.
 
         response = {
-            "debug":topioAlreadyExists,
+            "debugTopioAlreadyExists":topioAlreadyExists,
             "search_criteria":searchCriteria,
             "url":termNoAccentsLower,
             "name": name,
@@ -163,6 +164,93 @@ class Search(models.Model):
         return response
 
 
+    def onHSuter(termUnsafeInput):
+
+        # copy pasted from onTopio()
+        term = Search.inputFilter(termUnsafeInput)
+        termNoAccents = unidecode(term)
+        termLower = term.lower()
+        termNoAccentsLower = termNoAccents.lower()
+        termCap = term.capitalize()
+        termNoAccentsCap = termNoAccents.capitalize()
+        termUpper = term.upper()
+        termNoAccentsUpper = termNoAccents.upper()
+        searchCriteria = (term, termNoAccents, termLower, termNoAccentsLower, termCap, termNoAccentsCap, termUpper, termNoAccentsUpper)
+
+        # TODO 1. get the correct url according to first letter
+        # TODO 2. crawling html and get all the things
+        # TODO 3. dispatch all the things in variables
+
+        firstLetter = term[0].upper()
+        hSuterPage = ""
+        hSuterTermTag = False # will contain the title (<a>) tag
+
+        if(firstLetter == "E"):
+            hSuterPage = "D"
+        elif(firstLetter == "G"):
+            hSuterPage = "F"
+        elif(firstLetter in ["I","J","K","L","M"]):
+            hSuterPage = "H"
+        elif(firstLetter in ["O","P"]):
+            hSuterPage = "N"
+        elif(firstLetter in ["R","S"]):
+            hSuterPage = "Q"
+        elif(firstLetter in ["U","V","W","X","Y","Z"]):
+            hSuterPage = "T"
+        else:
+            hSuterPage = firstLetter
+
+        # fetch data from website
+        url = 'http://henrysuter.ch/glossaires/patois' + hSuterPage + '0.html'
+
+        htmlrequest = requests.get(url)  # TODO - show debug data
+        htmldata = htmlrequest.text
+        html = BeautifulSoup(htmldata, "html.parser")
+        hSuterTermTag = ""
+
+        # search for the term
+        all_a =  html.find_all('a')
+        for a in all_a:
+            if a.string == termCap:
+                hSuterTermTag = a
+                # TODO: sometimes there are several <a>'s (like: Niolu, Niolue)
+
+                hSuterTermDt = hSuterTermTag.parent
+                hSuterTermDd = hSuterTermDt.find_next_sibling('dd')
+                # TODO: extract all the things from the <dd> and populate the response fields
+
+                response = {
+                    "debug": hSuterTermDd.text,
+                    "url": termNoAccentsLower,
+                    "name": termCap,
+                    "type": "",
+                    "definition": "",
+                    "example": "",
+                    "alternative_forms": hSuterTermTag.string,
+                    "copyright": "henrysuter.ch",
+                    "origin": url
+                }
+
+                return response
+
+        return False
+
+    def onHSuterNames(termUnsafeInput):
+
+        # copy pasted from onTopio()
+        term = Search.inputFilter(termUnsafeInput)
+        termNoAccents = unidecode(term)
+        termLower = term.lower()
+        termNoAccentsLower = termNoAccents.lower()
+        termCap = term.capitalize()
+        termNoAccentsCap = termNoAccents.capitalize()
+        termUpper = term.upper()
+        termNoAccentsUpper = termNoAccents.upper()
+        searchCriteria = (term, termNoAccents, termLower, termNoAccentsLower, termCap, termNoAccentsCap, termUpper, termNoAccentsUpper)
+
+        # TODO 1. get the correct url according to first letter
+        # TODO 2. crawling html and get all the things
+        # TODO 3. dispatch all the things in variables
 
 '''
 Scratchpad - conversion de PHP vers Python - copier coller le code PHP ici.
