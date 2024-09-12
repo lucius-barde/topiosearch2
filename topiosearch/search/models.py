@@ -137,7 +137,7 @@ class Search(models.Model):
         result = cursor.execute(topioSearchQuery, (termNoAccentsLower,))
         topioAlreadyExists = result.fetchone()[0]
 
-        # TODO: can cause bugs if topio-name and hsuter-name both exist in the database (check with: huitante)
+        # TODO: solve the integrity problem when reloading a word that is already in database.
         if(topioAlreadyExists == 0 and name != ""):
             topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
             VALUES ( NULL, ?, "", ?,  ?, "", "topio.ch", "https://topio.ch/dico.php", DATETIME('now'), DATETIME('now'), 0, ?);'''
@@ -146,8 +146,7 @@ class Search(models.Model):
             connection.close()
         else:
             pass
-            # TODO: remove the "unique" constraint on url, we shall display all the things for a given url (to be tested with 'huitante')
-            # TODO: maybe allow for updating the entry here, though probably unnecessary.
+
 
         response = {
             "debugTopioAlreadyExists":topioAlreadyExists,
