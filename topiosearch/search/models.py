@@ -3,6 +3,7 @@ from unidecode import unidecode
 from bs4 import BeautifulSoup
 import requests
 import sqlite3
+import re
 
 
 # Create your models here.
@@ -140,7 +141,7 @@ class Search(models.Model):
         if(topioAlreadyExists == 0 and name != ""):
             topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
             VALUES ( NULL, ?, "", ?,  ?, "", "topio.ch", "https://topio.ch/dico.php", DATETIME('now'), DATETIME('now'), 0, ?);'''
-            cursor.execute(topioInsertQuery, (name, definition, example, termNoAccentsLower))
+            cursor.execute(topioInsertQuery, (name, definition, example, termNoAccentsLower+"--t"))
             connection.commit()
             connection.close()
         else:
@@ -151,7 +152,7 @@ class Search(models.Model):
         response = {
             "debugTopioAlreadyExists":topioAlreadyExists,
             "search_criteria":searchCriteria,
-            "url":termNoAccentsLower,
+            "url":termNoAccentsLower + "--t",
             "name": name,
             "type":"", # not present in topio data
             "definition":definition,
@@ -177,9 +178,6 @@ class Search(models.Model):
         termNoAccentsUpper = termNoAccents.upper()
         searchCriteria = (term, termNoAccents, termLower, termNoAccentsLower, termCap, termNoAccentsCap, termUpper, termNoAccentsUpper)
 
-        # TODO 1. get the correct url according to first letter
-        # TODO 2. crawling html and get all the things
-        # TODO 3. dispatch all the things in variables
 
         firstLetter = term[0].upper()
         hSuterPage = ""
@@ -218,14 +216,21 @@ class Search(models.Model):
                 hSuterTermDt = hSuterTermTag.parent
                 hSuterTermDd = hSuterTermDt.find_next_sibling('dd')
                 # TODO: extract all the things from the <dd> and populate the response fields
+                hSuterTermContents = hSuterTermDd.decode_contents()
+                hSuterTermContentsArray = re.split(r'<br\s*/?>', hSuterTermContents)
+
+                hSuterTermDefinition = hSuterTermContentsArray[0]
+                hSuterTermExampleParser = BeautifulSoup(hSuterTermContentsArray[1], "html.parser")
+                hSuterTermExample = hSuterTermExampleParser.get_text()
+
 
                 response = {
-                    "debug": hSuterTermDd.text,
-                    "url": termNoAccentsLower,
+                    "debug": hSuterTermContentsArray,
+                    "url": termNoAccentsLower + "--h",
                     "name": termCap,
                     "type": "",
-                    "definition": "",
-                    "example": "",
+                    "definition": hSuterTermDefinition,
+                    "example": hSuterTermExample,
                     "alternative_forms": hSuterTermTag.string,
                     "copyright": "henrysuter.ch",
                     "origin": url
