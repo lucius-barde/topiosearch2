@@ -133,11 +133,11 @@ class Search(models.Model):
         connection = sqlite3.connect('db.sqlite3')
         cursor = connection.cursor()
 
-        topioSearchQuery = '''SELECT COUNT(id) AS count FROM term_term WHERE url = ? AND copyright = "topio.ch";'''
-        result = cursor.execute(topioSearchQuery, (termNoAccentsLower,))
+        topioSearchQuery = '''SELECT COUNT(id) AS count FROM term_term WHERE url = ? ;'''
+        result = cursor.execute(topioSearchQuery, (termNoAccentsLower+"--t",))
         topioAlreadyExists = result.fetchone()[0]
 
-        # TODO: solve the integrity problem when reloading a word that is already in database.
+
         if(topioAlreadyExists == 0 and name != ""):
             topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
             VALUES ( NULL, ?, "", ?,  ?, "", "topio.ch", "https://topio.ch/dico.php", DATETIME('now'), DATETIME('now'), 0, ?);'''
@@ -149,7 +149,8 @@ class Search(models.Model):
 
 
         response = {
-            "debugTopioAlreadyExists":topioAlreadyExists,
+            "debug":"",
+            "localExists": topioAlreadyExists,
             "search_criteria":searchCriteria,
             "url":termNoAccentsLower + "--t",
             "name": name,
@@ -222,9 +223,27 @@ class Search(models.Model):
                 hSuterTermExampleParser = BeautifulSoup(hSuterTermContentsArray[1], "html.parser")
                 hSuterTermExample = hSuterTermExampleParser.get_text()
 
+                # save in database if not exists
+
+                connection = sqlite3.connect('db.sqlite3')
+                cursor = connection.cursor()
+
+                hSuterSearchQuery = '''SELECT COUNT(id) AS count FROM term_term WHERE url = ? ;'''
+                result = cursor.execute(hSuterSearchQuery, (termNoAccentsLower+'--h',))
+                hSuterAlreadyExists = result.fetchone()[0]
+
+                if (hSuterAlreadyExists == 0 and termCap != ""):
+                    topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
+                          VALUES ( NULL, ?, "", ?,  ?, ?, "henrysuter.ch", ?, DATETIME('now'), DATETIME('now'), 0, ?);'''
+                    cursor.execute(topioInsertQuery, (termCap, hSuterTermDefinition, hSuterTermExample, hSuterTermTag.string, url, termNoAccentsLower + "--h"))
+                    connection.commit()
+                    connection.close()
+                else:
+                    pass
 
                 response = {
-                    "debug": hSuterTermContentsArray,
+                    "debug": "",
+                    "localExists": hSuterAlreadyExists,
                     "url": termNoAccentsLower + "--h",
                     "name": termCap,
                     "type": "",
@@ -253,129 +272,142 @@ class Search(models.Model):
         searchCriteria = (term, termNoAccents, termLower, termNoAccentsLower, termCap, termNoAccentsCap, termUpper, termNoAccentsUpper)
 
         # TODO 1. get the correct url according to first letter
+
+        secondLetter = term[1].upper()
+        firstLetter = term[0].upper()
+        firstLetters = term[0].upper() + term[1].lower()
+
+        hsnPage = ""
+        hsnTermTag = False  # will contain the title (<a>) tag
+
+        if( firstLetters in ['Aa','Ab','Ac','Ad','Ae','Af','Ag'] ):
+            hsnPage = 'A0'
+        elif( firstLetters in ['Ai','Aj','Al','Am','An','Ao','Ap'] ):
+            hsnPage = 'A1'
+        elif (firstLetters in ['Ar','As']):
+            hsnPage = 'A2'
+        elif (firstLetters in ['At','Au','Av','Ay','Az']):
+            hsnPage = 'A3'
+        elif (firstLetters in ['Ba']):
+            hsnPage = 'B0'
+        elif (firstLetters in ['Be']):
+            hsnPage = 'B1'
+        elif (firstLetters in ['Bi','Bl']):
+            hsnPage = 'B2'
+        elif (firstLetters in ['Bo']):
+            hsnPage = 'B3'
+        elif (firstLetters in ['Br','Bu']):
+            hsnPage = 'B4'
+        elif (firstLetters in ['Ca','Ce']):
+            hsnPage = 'C0'
+        elif (firstLetters in ['Ch']):
+            hsnPage = 'C1'
+        elif (firstLetters in ['Ci','Cl']):
+            hsnPage = 'C2'
+        elif (firstLetters in ['Co']):
+            hsnPage = 'C3'
+        elif (firstLetters in ['Cp','Cr','Cu','Cy']):
+            hsnPage = 'C4'
+        elif (firstLetters in ['Da','De']):
+            hsnPage = 'D0'
+        elif (firstLetters in ['Dg','Di','Dj','Do','Dr','Du','Dy','Dz']):
+            hsnPage = 'D1'
+        elif (firstLetters in ['Ea','Eb','Ec','Ed']):
+            hsnPage = 'E0'
+        elif (firstLetters in ['Ef','Eg','Eh','Ei','El','Em','En','Eo','Ep','Eq','Er']):
+            hsnPage = 'E1'
+        elif (firstLetters in ['Es','Et','Eu','Ev','Ex','Ey','Ez']):
+            hsnPage = 'E2'
+        elif (firstLetters in ['Fa','Fe','Fi']):
+            hsnPage = 'F0'
+        elif (firstLetters in ['Fl','Fo','Fr','Fu']):
+            hsnPage = 'F1'
+        elif (firstLetters in ['Ga','Ge','Gi']):
+            hsnPage = 'G0'
+        elif (firstLetters in ['Gl','Go','Gr','Gu','Gy']):
+            hsnPage = 'G1'
+        elif (firstLetter in ['H']):
+            hsnPage = 'H0'
+        elif (firstLetter in ['I']):
+            hsnPage = 'I0'
+        elif (firstLetter in ['J']):
+            hsnPage = 'J0'
+        elif (firstLetter in ['K']):
+            hsnPage = 'K0'
+        elif (firstLetters in ['La']):
+            hsnPage = 'L0'
+        elif (firstLetters in ['Le','Lh','Li','Lo','Lu','Ly']):
+            hsnPage = 'L1'
+        elif (firstLetters in ['Ma']):
+            hsnPage = 'M0'
+        elif (firstLetters in ['Me','Mi']):
+            hsnPage = 'M1'
+        elif (firstLetters in ['Mo','Mu','My']):
+            hsnPage = 'M2'
+        elif (firstLetter in ['N']):
+            hsnPage = 'N0'
+        elif (firstLetter in ['O']):
+            hsnPage = 'O0'
+        elif (firstLetters in ['Pa']):
+            hsnPage = 'P0'
+        elif (firstLetters in ['Pe','Pf','Ph']):
+            hsnPage = 'P1'
+        elif (firstLetters in ['Pi','Pl']):
+            hsnPage = 'P2'
+        elif (firstLetters in ['Po','Pr','Pu','Py']):
+            hsnPage = 'P3'
+        elif (firstLetter in ['Q']):
+            hsnPage = 'Q0'
+        elif (firstLetters in ['Ra','Rb','Re','Rh']):
+            hsnPage = 'R0'
+        elif (firstLetters in ['Ri','Ro','Ru']):
+            hsnPage = 'R1'
+        elif (firstLetters in ['Sa']):
+            hsnPage = 'S0'
+        elif (firstLetters in ['Sc','Se','Si','So','Sp','St','Su','Sy']):
+            hsnPage = 'S1'
+        elif (firstLetters in ['Ta','Tc','Te']):
+            hsnPage = 'T0'
+        elif (firstLetters in ['Th','Ti','To']):
+            hsnPage = 'T1'
+        elif (firstLetters in ['Tr','Ts','Tu','Ty','Tz']):
+            hsnPage = 'T2'
+        elif (firstLetter in ['U']):
+            hsnPage = 'U0'
+        elif (firstLetters in ['Va']):
+            hsnPage = 'V0'
+        elif (firstLetters in ['Ve']):
+            hsnPage = 'V1'
+        elif (firstLetters in ['Vi','Vo','Vu','Vy']):
+            hsnPage = 'V2'
+        elif (firstLetter in ['W']):
+            hsnPage = 'W0'
+        elif (firstLetter in ['X']):
+            hsnPage = 'X0'
+        elif (firstLetter in ['Y']):
+            hsnPage = 'Y0'
+        elif (firstLetter in ['Z']):
+            hsnPage = 'Z0'
+
+        url = 'http://henrysuter.ch/glossaires/topo' + hsnPage + '.html'
+
+        '''
+        htmlrequest = requests.get(url)  # TODO - show debug data
+        htmldata = htmlrequest.text
+        html = BeautifulSoup(htmldata, "html.parser")
+        hsnTermTag = ""
+        '''
+
+        response = {
+            "debug": "To be developed - url to crawl is: " + url
+        }
+        return response
+
         # TODO 2. crawling html and get all the things
         # TODO 3. dispatch all the things in variables
 
 '''
 Scratchpad - conversion de PHP vers Python - copier coller le code PHP ici.
-
-$app->get('/topiosearch/hsuter[/]', function (Request $q, Response $r, array $args) {
-	
-	$validate = new Validator($this->db);
-	$dictionaryModel = new TopioSearch();
-    $blobModel = new Blob($this->db);
-    
-    $keepAccents = true;
-	$term = $validate->toFileName($_GET['term'],$keepAccents);
-    unset($keepAccents);
-    $term = ucfirst($term);
-
-//	$cachefile = ABSDIR.'/cache/topiosearch/'.$term[0].'/topiosearch--hsuter--'.$term.'.json';
-  
-
-    $getHsuterWord = $this->db->prepare('SELECT * FROM `api_oppidumweb_public` WHERE url = "topiosearch--hsuter--'.$term.'" AND edited > DATE_SUB(NOW(), INTERVAL 1 MONTH) LIMIT 1;');
-    $getHsuterWord->execute();
-    $cachefile = $getHsuterWord->fetch();
-
-
-	if(empty($cachefile)){
-
-        //hsuter remote
-
-        $firstLetter = strtoupper($term[0]);
-        
-        //firstletter is defined on henrysuter.ch:
-        switch($firstLetter){
-            case "E": $firstLetter = "D"; break;
-            case "G": $firstLetter = "F"; break;
-            case "I":
-            case "J":
-            case "K":
-            case "L":
-            case "M": $firstLetter = "H"; break;
-            case "O":
-            case "P": $firstLetter = "N"; break;
-            case "R":
-            case "S": $firstLetter = "Q"; break;
-            case "U":
-            case "V":
-            case "W":
-            case "X":
-            case "Y":
-            case "Z": $firstLetter = "T"; break;
-            
-        }
-        
-        $url = 'http://henrysuter.ch/glossaires/patois'.$firstLetter.'0.html';
-            
-        //fetch data from website    
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $dictHTML = curl_exec($ch);
-        curl_close($ch);     
-        $termJSON = $dictionaryModel->parseFileHSuter($dictHTML,$term);
-
-        if(!$termJSON){
-            return $r->withStatus(404)->withJson(['status'=>'error', 'term'=>$term, 'url'=>$url,'statusText'=>'This keyword doesn\'t match with any word in the database']);
-        }else{
-
-
-            $urlForApi = 'topiosearch--hsuter--';
-            
-            $termJSON['params']['copyright'] = '&copy; <a href="http://www.henrysuter.ch">henrysuter.ch</a>';
-            $termJSON['params']['origin'] = $url;
-            $urlForApi .= $termJSON['params']['term'];
-            $termJSON['url'] = $urlForApi;
-
-            /*if(!is_dir(ABSDIR.'/cache/topiosearch/'.$termJSON['params']['term'][0])){
-                mkdir(ABSDIR.'/cache/topiosearch/'.$termJSON['params']['term'][0]);
-                if(!is_dir(ABSDIR.'/cache/topiosearch/'.$termJSON['params']['term'][0])){
-                    return $r->withStatus(500)->withJson(['status'=>'error','statusText'=>'Unable to create the cache folder, please check the permissions on the server', 'term' => $term]);
-                }
-            }*/
-
-            $termJSON['edited'] = date('Y-m-d H:i:s');
-            $termJSON['lang'] = "fr";
-            $termJSON['parent'] = 0;
-            $termJSON['status'] = 1;
-
-            ksort($termJSON);
-            ksort($termJSON['params']);
-
-            
-            //Save in topio database - Params
-            $termJSON['type'] = "topiosearch";
-            $termJSON['name'] = $termJSON['url'];
-            $termJSON['content'] = $termJSON['params']['term'];
-
-            $insertEntry = $blobModel->addBlob($termJSON); 
-            $termJSON['params']['db_insert_callback'] = $insertEntry;
-            $termJSON['params']['source'] = "remote";
-
-            
-            return $r->withStatus(200)->withJson($termJSON);
-
-        }
-
-
-    }else{
-
-        //hsuter local
-        $localdata = $cachefile;
-        if(!!$localdata){
-            $localdata['params'] = json_decode($localdata['params'],true);
-            $localdata['params']['source'] = 'local';
-            $localdata['params']['fetchDateDiff'] = time() - $localdata['edited'];
-            return $r->withStatus(200)->withJson($localdata);
-        }else{
-            return $r->withStatus(500)->withJson(['status'=>'error','statusText'=>'Error: this entry exists in the dictionary, but the content is corrupted.', 'term' => $term]);
-        }
-
-    }
-
-	
-})->setName('topioSearchHsuter');
 
 
 $app->get('/topiosearch/hsuternames[/]', function (Request $q, Response $r, array $args) {
@@ -406,45 +438,7 @@ $app->get('/topiosearch/hsuternames[/]', function (Request $q, Response $r, arra
         
         //firstletter is defined on henrysuter.ch:
         if(in_array($firstLetters,['Aa','Ab','Ac','Ad','Ae','Af','Ag'])){$page = 'A0';}
-        elseif(in_array($firstLetters,['Ai','Aj','Al','Am','An','Ao','Ap'])){$page = 'A1';}
-        elseif(in_array($firstLetters,['Ar','As'])){$page = 'A2';}
-        elseif(in_array($firstLetters,['At','Au','Av','Ay','Az'])){$page = 'A3';}
-        
-        elseif(in_array($firstLetters,['Ba'])){$page = 'B0';}
-        elseif(in_array($firstLetters,['Be'])){$page = 'B1';}
-        elseif(in_array($firstLetters,['Bi','Bl'])){$page = 'B2';}
-        elseif(in_array($firstLetters,['Bo'])){$page = 'B3';}
-        elseif(in_array($firstLetters,['Br','Bu'])){$page = 'B4';}
-
-        elseif(in_array($firstLetters,['Ca','Ce'])){$page = 'C0';}
-        elseif(in_array($firstLetters,['Ch'])){$page = 'C1';}
-        elseif(in_array($firstLetters,['Ci','Cl'])){$page = 'C2';}
-        elseif(in_array($firstLetters,['Co'])){$page = 'C3';}
-        elseif(in_array($firstLetters,['Cp','Cr','Cu','Cy'])){$page = 'C4';}
-        
-        elseif(in_array($firstLetters,['Da','De'])){$page = 'D0';}
-        elseif(in_array($firstLetters,['Dg','Di','Dj','Do','Dr','Du','Dy','Dz'])){$page = 'D1';}
-        
-        elseif(in_array($firstLetters,['Ea','Eb','Ec','Ed'])){$page = 'E0';}
-        elseif(in_array($firstLetters,['Ef','Eg','Eh','Ei','El','Em','En','Eo','Ep','Eq','Er'])){$page = 'E1';}
-        elseif(in_array($firstLetters,['Es','Et','Eu','Ev','Ex','Ey','Ez'])){$page = 'E2';}
-        
-        elseif(in_array($firstLetters,['Fa','Fe','Fi'])){$page = 'F0';}
-        elseif(in_array($firstLetters,['Fl','Fo','Fr','Fu'])){$page = 'F1';}
-
-        elseif(in_array($firstLetters,['Ga','Ge','Gi'])){$page = 'G0';}
-        elseif(in_array($firstLetters,['Gl','Go','Gr','Gu','Gy'])){$page = 'G1';}
-        
-        elseif(in_array($firstLetter,['H'])){$page = 'H0';}
-
-        elseif(in_array($firstLetter,['I'])){$page = 'I0';}
-        
-        elseif(in_array($firstLetter,['J'])){$page = 'J0';}
-
-        elseif(in_array($firstLetter,['K'])){$page = 'K0';}
-
-        elseif(in_array($firstLetters,['La'])){$page = 'L0';}
-        elseif(in_array($firstLetters,['Le','Lh','Li','Lo','Lu','Ly'])){$page = 'L1';}
+  
 
         elseif(in_array($firstLetters,['Ma'])){$page = 'M0';}
         elseif(in_array($firstLetters,['Me','Mi'])){$page = 'M1';}
