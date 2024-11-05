@@ -220,7 +220,7 @@ class Search(models.Model):
                 hSuterTermContentsArray = re.split(r'<br\s*/?>', hSuterTermContents)
 
                 hSuterTermDefinition = hSuterTermContentsArray[0]
-                hSuterTermExampleParser = BeautifulSoup(hSuterTermContentsArray[1], "html.parser")
+                hSuterTermExampleParser = BeautifulSoup("[br]".join(hSuterTermContentsArray[1:]), "html.parser")
                 hSuterTermExample = hSuterTermExampleParser.get_text()
 
                 # save in database if not exists
@@ -391,161 +391,64 @@ class Search(models.Model):
 
         url = 'http://henrysuter.ch/glossaires/topo' + hsnPage + '.html'
 
-        '''
+
         htmlrequest = requests.get(url)  # TODO - show debug data
         htmldata = htmlrequest.text
         html = BeautifulSoup(htmldata, "html.parser")
         hsnTermTag = ""
-        '''
 
-        response = {
-            "debug": "To be developed - url to crawl is: " + url
-        }
-        return response
+        # search for the term
+        all_a = html.find_all('a')
+        for a in all_a:
+            if a.string == termCap:
+                hsnTermTag = a
+                # TODO: sometimes there are several <a>'s (like: Niolu, Niolue)
 
-        # TODO 2. crawling html and get all the things
-        # TODO 3. dispatch all the things in variables
+                hsnTermDt = hsnTermTag.parent
+                hsnTermDd = hsnTermDt.find_next_sibling('dd')
+                # TODO: extract all the things from the <dd> and populate the response fields
+                hsnTermContents = hsnTermDd.decode_contents()
+                hsnTermContentsArray = re.split(r'<br\s*/?>', hsnTermContents)
 
-'''
-Scratchpad - conversion de PHP vers Python - copier coller le code PHP ici.
+                hsnTermDefinition = hsnTermContentsArray[0]
+                hsnTermExampleParser = BeautifulSoup("[br]".join(hsnTermContentsArray[1:]), "html.parser")
+                hsnTermExample = hsnTermExampleParser.get_text()
 
+                # save in database if not exists
 
-$app->get('/topiosearch/hsuternames[/]', function (Request $q, Response $r, array $args) {
-	
-	$validate = new Validator($this->db);
-	$dictionaryModel = new TopioSearch();
-    $blobModel = new Blob($this->db);
-    
-    $keepAccents = true;
-	$term = $validate->toFileName($_GET['term'],$keepAccents);
-    unset($keepAccents);
-    $term = ucfirst($term);
-	
+                connection = sqlite3.connect('db.sqlite3')
+                cursor = connection.cursor()
 
-//    $cachefile = ABSDIR.'/cache/topiosearch/'.$term[0].'/topiosearch--hsuternames--'.$term.'.json';
-	
-        
-    $getHsuterNamesWord = $this->db->prepare('SELECT * FROM `api_oppidumweb_public` WHERE url = "topiosearch--hsuternames--'.$term.'" AND edited > DATE_SUB(NOW(), INTERVAL 1 MONTH) LIMIT 1;');
-    $getHsuterNamesWord->execute();
-    $cachefile = $getHsuterNamesWord->fetch();
+                hsnSearchQuery = '''SELECT COUNT(id) AS count FROM term_term WHERE url = ? ;'''
+                result = cursor.execute(hsnSearchQuery, (termNoAccentsLower + '--n',))
+                hsnAlreadyExists = result.fetchone()[0]
 
-	if(empty($cachefile)){
-       
-        //hsuternames remote
-        $secondLetter = strtoupper($term[1]);
-        $firstLetter = strtoupper($term[0]);
-        $firstLetters = strtoupper($term[0]).strtolower($term[1]);
-        
-        //firstletter is defined on henrysuter.ch:
-        if(in_array($firstLetters,['Aa','Ab','Ac','Ad','Ae','Af','Ag'])){$page = 'A0';}
-  
+                if (hsnAlreadyExists == 0 and termCap != ""):
+                    topioInsertQuery = '''INSERT INTO term_term (id,name,type,definition,example,alternative_forms,copyright,origin,date_added,date_edited,key,url)
+                                  VALUES ( NULL, ?, "", ?,  ?, ?, "henrysuter.ch", ?, DATETIME('now'), DATETIME('now'), 0, ?);'''
+                    cursor.execute(topioInsertQuery, (
+                    termCap, hsnTermDefinition, hsnTermExample, hsnTermTag.string, url,
+                    termNoAccentsLower + "--n"))
+                    connection.commit()
+                    connection.close()
+                else:
+                    pass
 
-        elseif(in_array($firstLetters,['Ma'])){$page = 'M0';}
-        elseif(in_array($firstLetters,['Me','Mi'])){$page = 'M1';}
-        elseif(in_array($firstLetters,['Mo','Mu','My'])){$page = 'M2';}
-        
-        elseif(in_array($firstLetter,['N'])){$page = 'N0';}
-
-        elseif(in_array($firstLetter,['O'])){$page = 'O0';}
-        
-        elseif(in_array($firstLetters,['Pa'])){$page = 'P0';}
-        elseif(in_array($firstLetters,['Pe','Pf','Ph'])){$page = 'P1';}
-        elseif(in_array($firstLetters,['Pi','Pl'])){$page = 'P2';}
-        elseif(in_array($firstLetters,['Po','Pr','Pu','Py'])){$page = 'P3';}
-        
-        elseif(in_array($firstLetter,['Q'])){$page = 'Q0';}
-        
-        elseif(in_array($firstLetters,['Ra','Rb','Re','Rh'])){$page = 'R0';}
-        elseif(in_array($firstLetters,['Ri','Ro','Ru'])){$page = 'R1';}
-        
-        elseif(in_array($firstLetters,['Sa'])){$page = 'S0';}
-        elseif(in_array($firstLetters,['Sc','Se','Si','So','Sp','St','Su','Sy'])){$page = 'S1';}
-
-        elseif(in_array($firstLetters,['Ta','Tc','Te'])){$page = 'T0';}
-        elseif(in_array($firstLetters,['Th','Ti','To'])){$page = 'T1';}
-        elseif(in_array($firstLetters,['Tr','Ts','Tu','Ty','Tz'])){$page = 'T2';}
-
-        elseif(in_array($firstLetter,['U'])){$page = 'U0';}
-        
-        elseif(in_array($firstLetters,['Va'])){$page = 'V0';}
-        elseif(in_array($firstLetters,['Ve'])){$page = 'V1';}
-        elseif(in_array($firstLetters,['Vi','Vo','Vu','Vy'])){$page = 'V2';}
-        
-        elseif(in_array($firstLetter,['W'])){$page = 'W0';}
-        elseif(in_array($firstLetter,['X'])){$page = 'X0';}
-        elseif(in_array($firstLetter,['Y'])){$page = 'Y0';}
-        elseif(in_array($firstLetter,['Z'])){$page = 'Z0';}
-
-
-        $url = 'http://henrysuter.ch/glossaires/topo'.$page.'.html';
-            
-        //fetch data from website    
-        $ch = curl_init();
-        curl_setopt($ch, CURLOPT_URL, $url);
-        curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-        $dictHTML = curl_exec($ch);
-        curl_close($ch);     
-        
-        $termJSON = $dictionaryModel->parseFileHSuter($dictHTML,$term);
-        
-        if(!$termJSON){
-            return $r->withStatus(404)->withJson(['status'=>'error', 'term'=>$term, 'url'=>$url,'statusText'=>'This keyword doesn\'t match with any word in the database']);
-        }else{
-
-
-            $urlForApi = 'topiosearch--hsuternames--';
-            
-            $termJSON['params']['copyright'] = '&copy; <a href="http://www.henrysuter.ch">henrysuter.ch</a>';
-            $termJSON['params']['origin'] = $url;
-            $urlForApi .= $termJSON['params']['term'];
-            $termJSON['url'] = $urlForApi;
-
-            /*if(!is_dir(ABSDIR.'/cache/topiosearch/'.$termJSON['params']['term'][0])){
-                mkdir(ABSDIR.'/cache/topiosearch/'.$termJSON['params']['term'][0]);
-                if(!is_dir(ABSDIR.'/cache/topiosearch/'.$termJSON['params']['term'][0])){
-                    return $r->withStatus(500)->withJson(['status'=>'error','statusText'=>'Unable to create the cache folder, please check the permissions on the server', 'term' => $term]);
+                response = {
+                    "debug": "",
+                    "localExists": hsnAlreadyExists,
+                    "url": termNoAccentsLower + "--n",
+                    "name": termCap,
+                    "type": "",
+                    "definition": hsnTermDefinition,
+                    "example": hsnTermExample,
+                    "alternative_forms": hsnTermTag.string,
+                    "copyright": "henrysuter.ch",
+                    "origin": url
                 }
-            }*/
-            $termJSON['edited'] = date('Y-m-d H:i:s');
-            $termJSON['lang'] = "fr";
-            $termJSON['parent'] = 0;
-            $termJSON['status'] = 1;
 
-            ksort($termJSON);
-            ksort($termJSON['params']);
+                return response
 
-            
-            //Save in topio database - Params
-            $termJSON['type'] = "topiosearch";
-            $termJSON['name'] = $termJSON['url'];
-            $termJSON['content'] = $termJSON['params']['term'];
-
-            $insertEntry = $blobModel->addBlob($termJSON); 
-            $termJSON['params']['db_insert_callback'] = $insertEntry;
-            $termJSON['params']['source'] = "remote";
-
-            
-
-            return $r->withStatus(200)->withJson($termJSON);
-        }
-
-    }else{
-        
-        //hsuternames local
-        $localdata = $cachefile;
-        if(!!$localdata){
-            $localdata['params'] = json_decode($localdata['params'],true);
-            $localdata['params']['source'] = 'local';
-            $localdata['params']['fetchDateDiff'] = time() - $localdata['edited'];
-            return $r->withStatus(200)->withJson($localdata);
-        }else{
-            return $r->withStatus(500)->withJson(['status'=>'error','statusText'=>'Error: this entry exists in the dictionary, but the content is corrupted.', 'term' => $term]);
-        }
+        return False
 
 
-    }
-
-        
-})->setName('topioSearchHsuterNames');
-
-'''
